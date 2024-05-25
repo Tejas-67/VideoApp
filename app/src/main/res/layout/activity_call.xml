@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".CallActivity"
     android:keepScreenOn="true">
 
     <LinearLayout
@@ -63,7 +62,6 @@
         android:layout_width="match_parent"
         android:id="@+id/callLayout"
         android:visibility="gone"
-        tools:visibility="visible"
         android:layout_height="match_parent">
         <org.webrtc.SurfaceViewRenderer
             android:id="@+id/remote_view"

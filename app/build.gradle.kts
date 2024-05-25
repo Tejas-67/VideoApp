@@ -51,4 +51,5 @@ dependencies {
     implementation("com.mesibo.api:webrtc:1.0.5")
     implementation("org.java-websocket:Java-WebSocket:1.5.3")
     implementation("com.google.code.gson:gson:2.10")
+    implementation("com.guolindev.permissionx:permissionx:1.6.1")
 }
