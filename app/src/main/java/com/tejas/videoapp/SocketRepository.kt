@@ -13,8 +13,10 @@ class SocketRepository(
 ){
     private var webSocket: WebSocketClient? = null
     private var username: String? = null
-    val BASE_URL = "ws://192.168.123.205:3000"
+    val BASE_URL = "ws://192.168.208.205:3000"
     val BASE_URL_R = "ws://10.0.2.2:3000"
+
+    //localview already initialized issue
 
     fun initSocket(username: String){
         this.username = username
