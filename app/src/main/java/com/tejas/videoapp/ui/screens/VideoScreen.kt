@@ -6,6 +6,7 @@ import com.tejas.videoapp.ui.viewmodel.MainViewModel
 
 @Composable
 fun VideoScreen(
+    roomId: String,
     navController: NavController,
     viewModel: MainViewModel
 ){

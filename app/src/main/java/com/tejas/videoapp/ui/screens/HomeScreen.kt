@@ -24,8 +24,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.tejas.videoapp.ui.components.RoomNameAlertDialog
 import com.tejas.videoapp.ui.viewmodel.MainViewModel
 import com.tejas.videoapp.utils.Constants.VIDEO_SCREEN
 
@@ -35,11 +37,18 @@ fun HomeScreen(
     navController: NavController,
     viewModel: MainViewModel
 ){
-     val permissionLauncher = rememberLauncherForActivityResult(
+    val context = LocalContext.current
+    val createRoomDialog = RoomNameAlertDialog(context, object: RoomNameAlertDialog.RoomNameDialogListener{
+        override fun onCreateRoomName(roomName: String) {
+
+            navController.navigate("$VIDEO_SCREEN/${roomName}")
+        }
+    })
+    val permissionLauncher = rememberLauncherForActivityResult(
          contract = ActivityResultContracts.RequestMultiplePermissions()
      ){ permissions ->
          if(permissions.all { it.value }){
-             //viewModel.init()
+             viewModel.init()
          }
      }
 
