@@ -1,75 +1,103 @@
 package com.tejas.videoapp.ui.viewmodel
 
+import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
-import android.os.Build
 import android.os.IBinder
-import androidx.annotation.RequiresApi
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
 import com.tejas.videoapp.datamodel.RoomModel
+import com.tejas.videoapp.remote.socket.SocketEventSender
 import com.tejas.videoapp.service.CallService
+import com.tejas.videoapp.service.CallServiceActions
+import com.tejas.videoapp.webrtc.WebRTCFactory
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import org.webrtc.MediaStream
+import org.webrtc.SurfaceViewRenderer
 import javax.inject.Inject
 
-
 @HiltViewModel
+@SuppressLint("StaticFieldLeak")
 class MainViewModel @Inject constructor(
     private val context: Context,
-    private val gson: Gson
-): ViewModel() {
+    private val eventSender: SocketEventSender,
+    private val webRTCFactory: WebRTCFactory
+) : ViewModel() {
 
-    var roomState: MutableStateFlow<List<RoomModel>?> = MutableStateFlow(null)
-    private var callService: CallService? = null
+    private lateinit var callService: CallService
     private var isBound = false
 
-    private val serviceConnection = object: ServiceConnection{
-        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+    //states
+    var roomsState: MutableStateFlow<List<RoomModel>?> = MutableStateFlow(null)
+    var mediaStreamsState: MutableStateFlow<HashMap<String, MediaStream>?> = MutableStateFlow(
+        hashMapOf()
+    )
+
+    private val serviceConnection = object : ServiceConnection {
+        override fun onServiceConnected(className: ComponentName, service: IBinder) {
             val binder = service as CallService.LocalBinder
             callService = binder.getService()
             isBound = true
             handleServiceBound()
         }
 
-        override fun onServiceDisconnected(name: ComponentName?) {
+        override fun onServiceDisconnected(arg0: ComponentName) {
             isBound = false
-        }
-
-        override fun onBindingDied(name: ComponentName?) {
-            super.onBindingDied(name)
-        }
-
-        override fun onNullBinding(name: ComponentName?) {
-            super.onNullBinding(name)
         }
     }
 
     private fun handleServiceBound() {
-        callService?.roomState?.onEach { rooms ->
-            roomState.emit(rooms)
-        }?.launchIn(viewModelScope)
+        callService.roomsState.onEach { rooms ->
+            roomsState.emit(rooms)
+        }.launchIn(viewModelScope)
+
+        callService.mediaStreamsState.onEach { mediaStreams ->
+            // Directly propagate the state without setting a new value
+            mediaStreamsState.emit(mediaStreams)
+        }.launchIn(viewModelScope)
     }
 
+    fun onCreateRoomClicked(roomName: String) {
+        eventSender.createRoom(roomName)
+    }
+
+    fun onRoomJoined(roomName: String, view:SurfaceViewRenderer) {
+        callService.initializeSurface(view)
+        eventSender.joinRoom(roomName)
+    }
+
+    fun init() {
+        Intent(context, CallService::class.java).apply {
+            action = CallServiceActions.START.name
+        }.also { intent ->
+            CallService.startService(context)
+            context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+        }
+
+    }
+
+
     override fun onCleared() {
-        super.onCleared()
-        if(isBound) {
+        if (isBound) {
             context.unbindService(serviceConnection)
             isBound = false
         }
+        super.onCleared()
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun init(){
-        Intent(context, CallService::class.java).apply {
-            CallService.startService(context)
-            context.bindService(this, serviceConnection, Context.BIND_AUTO_CREATE)
-        }
+    fun onLeaveConferenceClicked() {
+        eventSender.leaveAllRooms()
+        callService.leaveRoom()
+    }
+
+    fun initRemoteSurfaceView(view: SurfaceViewRenderer) {
+        webRTCFactory.initRemoteSurfaceView(view)
     }
 
 }
