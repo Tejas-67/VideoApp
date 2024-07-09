@@ -12,7 +12,6 @@ import com.tejas.videoapp.ui.screens.HomeScreen
 import com.tejas.videoapp.ui.screens.VideoScreen
 import com.tejas.videoapp.ui.viewmodel.MainViewModel
 import com.tejas.videoapp.utils.Constants.MAIN_SCREEN
-import com.tejas.videoapp.utils.Constants.VIDEO_SCREEN
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
